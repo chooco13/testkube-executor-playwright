@@ -9,6 +9,9 @@ test('has title', async ({ page }) => {
 });
 
 test('get started link', async ({ page }) => {
+  if (process.env['FORCE_FAIL']) {
+    expect(true).toEqual(false);
+  }
   await page.goto('https://playwright.dev/');
 
   // Click the get started link.

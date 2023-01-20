@@ -80,15 +80,20 @@ func (r *PlaywrightRunner) Run(execution testkube.Execution) (result testkube.Ex
 		runner = "pnpx"
 	}
 
+	envManager := secret.NewEnvManagerWithVars(execution.Variables)
+
 	args := []string{"playwright", "test"}
 	args = append(args, execution.Args...)
 
-	out, err := executor.Run(runPath, runner, nil, args...)
+	for _, value := range envManager.Variables {
+		os.Setenv(value.Name, value.Value)
+	}
+
+	out, err := executor.Run(runPath, runner, envManager, args...)
 	if err != nil {
 		return result, fmt.Errorf("playwright test error: %w\n\n%s", err, out)
 	}
 
-	envManager := secret.NewEnvManagerWithVars(execution.Variables)
 	out = envManager.Obfuscate(out)
 	result = testkube.ExecutionResult{
 		Status:     testkube.ExecutionStatusPassed,
@@ -98,7 +103,7 @@ func (r *PlaywrightRunner) Run(execution testkube.Execution) (result testkube.Ex
 
 	if r.Params.ScrapperEnabled {
 		if err = scrapeArtifacts(r, execution); err != nil {
-			return result, err	
+			return result, err
 		}
 	}
 
@@ -120,7 +125,7 @@ func scrapeArtifacts(r *PlaywrightRunner, execution testkube.Execution) (err err
 		return fmt.Errorf("mkdir error: %w", err)
 	}
 
-	if _, err := executor.Run(projectPath, "zip", nil, compressedName + "/" + originalName + ".zip", "-r", originalName); err != nil {
+	if _, err := executor.Run(projectPath, "zip", nil, compressedName+"/"+originalName+".zip", "-r", originalName); err != nil {
 		return fmt.Errorf("zip error: %w", err)
 	}
 

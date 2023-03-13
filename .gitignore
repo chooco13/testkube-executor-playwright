@@ -28,3 +28,6 @@ site
 dist/
 
 .vscode
+
+# example
+examples/node_modules

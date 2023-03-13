@@ -126,21 +126,23 @@ func (r *PlaywrightRunner) GetType() runner.Type {
 func scrapeArtifacts(r *PlaywrightRunner, execution testkube.Execution) (err error) {
 	projectPath := filepath.Join(r.Params.DataDir, "repo", execution.Content.Repository.Path)
 
-	originalName := "playwright-report"
-	compressedName := originalName + "-zip"
+	reportDir := "playwright-report"
+	artifactDir := "artifacts"
 
-	if _, err := executor.Run(projectPath, "mkdir", nil, compressedName); err != nil {
-		output.PrintLog(fmt.Sprintf("%s Artifact scraping failed: making dir %s", ui.IconCross, compressedName))
+	if _, err := executor.Run(projectPath, "mkdir", nil, artifactDir); err != nil {
+
+	} else if _, err := executor.Run(projectPath, "mkdir", nil, artifactDir); err != nil {
+		output.PrintLog(fmt.Sprintf("%s Artifact scraping failed: making dir %s", ui.IconCross, artifactDir))
 		return fmt.Errorf("mkdir error: %w", err)
 	}
 
-	if _, err := executor.Run(projectPath, "zip", nil, compressedName+"/"+originalName+".zip", "-r", originalName); err != nil {
-		output.PrintLog(fmt.Sprintf("%s Artifact scraping failed: zipping reports %s", ui.IconCross, originalName))
+	if _, err := executor.Run(projectPath, "zip", nil, artifactDir+"/"+reportDir+".zip", "-r", reportDir); err != nil {
+		output.PrintLog(fmt.Sprintf("%s Artifact scraping failed: zipping reports %s", ui.IconCross, reportDir))
 		return fmt.Errorf("zip error: %w", err)
 	}
 
 	directories := []string{
-		filepath.Join(projectPath, compressedName),
+		filepath.Join(projectPath, artifactDir),
 	}
 	if err := r.Scraper.Scrape(execution.Id, directories); err != nil {
 		output.PrintLog(fmt.Sprintf("%s Artifact scraping failed", ui.IconCross))
